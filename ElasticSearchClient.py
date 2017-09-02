@@ -53,7 +53,43 @@ class ElasticSearchClient(object):
         self._logger.info("inserting bulk in '%s'", indexName)
         eslocal.bulk(index = indexName, body = bulk_data, refresh = True)
         self._logger.info("done bulk inserting in '%s'", indexName)
- 
+
+    def search_result(self, indexName, typeName, query):
+        self._logger.info("searching and extracting results '%s'", indexName)
+        res = self.es.search(index=indexName, doc_type=typeName, body=query)
+        return res 
+
+    def scan_result_sync(self, indexName, typeName, query):
+        self._logger.info("initializing scroll for '%s'", indexName)
+        page = self.es.search(index = indexName, doc_type = typeName, scroll = '2m', search_type = 'scan', size = 1000, body = query)
+        sid = page['_scroll_id']
+        scroll_size = page['hits']['total']
+        pagelist = []
+        # Start scrolling
+        while (scroll_size > 0):
+            self._logger.info("scrolling '%s'", indexName)
+            page = self.es.scroll(scroll_id = sid, scroll = '2m')
+            pagelist.add(page)
+            sid = page['_scroll_id']
+            scroll_size = len(page['hits']['hits'])
+        return pagelist
+
+    def scan_result_cb(self, indexName, typeName, query, cb):
+        self._logger.info("initializing scroll for '%s'", indexName)
+        page = self.es.search(index = indexName, doc_type = typeName, scroll = '2m', search_type = 'scan', size = 1000, body = query)
+        sid = page['_scroll_id']
+        scroll_size = page['hits']['total']
+        # Start scrolling
+        while (scroll_size > 0):
+            self._logger.info("scrolling '%s'", indexName)
+            page = self.es.scroll(scroll_id = sid, scroll = '2m')
+            sid = page['_scroll_id']
+            scroll_size = len(page['hits']['hits'])
+            cb(page)
+      
+
+
+
     def _flogger(self):
 
         self._logger = logging.getLogger('ElasticSearchClient')

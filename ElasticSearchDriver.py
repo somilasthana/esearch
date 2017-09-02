@@ -29,6 +29,29 @@ class ElasticSearchDriver(object):
         self._logger.info("Pushing  data ...")
         self.es.add_document(self.indexname,self.typename, data_dict, data_dict.keys()) 
 
+    def searchresult(self, query):
+        self._logger.info("Searching results ...")
+        res = self.es.search_result(self.indexname, self.typename, query)
+        resultlist = []
+        for doc in res['hits']['hits']:
+            resultmap = {}
+            resultmap.setdefault('_id', doc['_id'])
+            resultmap.setdefault('_source', doc['_source']) 
+            resultlist.add(resultmap)
+        return resultlist
+
+    def scanresult(self, query):
+        pagelist = self.es.scan_result_sync(self.indexname, self.typename, query)
+        resultlist = []
+        for page in pagelist:
+            for doc in page['hits']['hits']:
+                resultmap = {}
+                resultmap.setdefault('_id', doc['_id'])
+                resultmap.setdefault('_source', doc['_source'])
+                resultlist.add(resultmap)
+        return resultlist
+
+
     def _flogger(self):
 
         self._logger = logging.getLogger('ElasticSearchDriver')
