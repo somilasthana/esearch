@@ -8,12 +8,11 @@ import json
 
 class ElasticSearchDriver(object):
 
-    def __init__(self, idname, indexname, typename):
+    def __init__(self, indexname, typename):
         self.es = ElasticSearchClient.ElasticSearchClient()
         self.esdb = ESDatabaseMetaStore.ESDatabaseMetaStore()
         self.indexname = indexname
         self.typename = typename
-        self.idfieldname = idname
         self._flogger()
 
     def createtable(self,  schemanamecount):
@@ -29,15 +28,34 @@ class ElasticSearchDriver(object):
         self._logger.info("Pushing  data ...")
         self.es.add_document(self.indexname,self.typename, data_dict, data_dict.keys()) 
 
+    def searchresult(self):
+        self._logger.info("Searching results ... index=%s type=%s", self.indexname, self.typename)
+        queryhandle  = {}
+        res = self.es.search_result(self.indexname, self.typename, queryhandle)
+        resultlist = []
+        for doc in res['hits']['hits']:
+            resultmap = {}
+            resultmap.setdefault('_id', doc['_id'])
+            resultmap.setdefault('_source', doc['_source'])
+            resultlist.append(resultmap)
+        return resultlist
+
+
     def searchresult(self, query):
-        self._logger.info("Searching results ...")
-        res = self.es.search_result(self.indexname, self.typename, query)
+        self._logger.info("Searching results ... index=%s type=%s", self.indexname, self.typename)
+        self._logger.info("Query '%s'", query)
+        #queryhandle = { 'query' : json.loads(query) }
+        #jquery = json.loads(query)
+        #queryhandle = {"query": {"match": {"body": "McGrath"}}}
+        queryhandle = {"query": {"match": query}}
+        self._logger.info("Queryi Handle '%s'", json.dumps(queryhandle))
+        res = self.es.search_result(self.indexname, self.typename, queryhandle)
         resultlist = []
         for doc in res['hits']['hits']:
             resultmap = {}
             resultmap.setdefault('_id', doc['_id'])
             resultmap.setdefault('_source', doc['_source']) 
-            resultlist.add(resultmap)
+            resultlist.append(resultmap)
         return resultlist
 
     def scanresult(self, query):
@@ -48,7 +66,7 @@ class ElasticSearchDriver(object):
                 resultmap = {}
                 resultmap.setdefault('_id', doc['_id'])
                 resultmap.setdefault('_source', doc['_source'])
-                resultlist.add(resultmap)
+                resultlist.appendElasticSearchDriver.py(resultmap)
         return resultlist
 
 
