@@ -3,7 +3,6 @@ import logging
 from wsgiref import simple_server 
 import falcon
 import sys
-sys.path.append('/home/bluebricks/workspace/Somil/ES/')
 import ElasticSearchDriver
 
 def token_is_valid(token, user_id):
