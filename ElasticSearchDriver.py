@@ -59,14 +59,19 @@ class ElasticSearchDriver(object):
         return resultlist
 
     def scanresult(self, query):
+
+        #queryhandle = {"query": {"match": query}}
+        queryhandle = query
         pagelist = self.es.scan_result_sync(self.indexname, self.typename, query)
         resultlist = []
+
+        self._logger.info("Scan Handle '%s' '%s' '%s'", self.indexname, self.typename, queryhandle)
         for page in pagelist:
-            for doc in page['hits']['hits']:
+            for doc in page:
                 resultmap = {}
                 resultmap.setdefault('_id', doc['_id'])
                 resultmap.setdefault('_source', doc['_source'])
-                resultlist.appendElasticSearchDriver.py(resultmap)
+                resultlist.append(resultmap)
         return resultlist
 
 

@@ -61,7 +61,8 @@ class ElasticSearchClient(object):
 
     def scan_result_sync(self, indexName, typeName, query):
         self._logger.info("initializing scroll for '%s'", indexName)
-        page = self.es.search(index = indexName, doc_type = typeName, scroll = '2m', search_type = 'scan', size = 1000, body = query)
+        #query={"query": {"match" : {"publisher": "Soar Printing"}}}
+        page = self.es.search(index = indexName, doc_type = typeName, scroll = '2m',  size = 1000, body = query )
         sid = page['_scroll_id']
         scroll_size = page['hits']['total']
         pagelist = []
@@ -69,7 +70,7 @@ class ElasticSearchClient(object):
         while (scroll_size > 0):
             self._logger.info("scrolling '%s'", indexName)
             page = self.es.scroll(scroll_id = sid, scroll = '2m')
-            pagelist.add(page)
+            pagelist.append(page['hits']['hits'])
             sid = page['_scroll_id']
             scroll_size = len(page['hits']['hits'])
         return pagelist
